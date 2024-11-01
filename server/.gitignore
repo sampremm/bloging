@@ -1,0 +1,11 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore build directory
+build/
+
+# Ignore .env files (for environment variables)
+.env
+
+# Ignore specific files
+server/react-js-blog-website-c9a24-firebase-adminsdk-dndxz-48a34e334c.json
