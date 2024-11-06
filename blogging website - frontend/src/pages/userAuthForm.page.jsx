@@ -12,19 +12,19 @@ import { authWithGoogle } from "../common/firebase";
 const UserAuthForm = ({ type }) => {
   const { userAuth, setUserAuth } = useContext(UserContext);
   const access_token = userAuth ? userAuth.access_token : null;
-
-  const userAuthThroughServer = (serverRoot, formData) => {
-    axios
-      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoot, formData)
-      .then(({ data }) => {
-        storeInSession("user", JSON.stringify(data));
-        setUserAuth(data);
-        toast.success("Authentication successful!");
-      })
-      .catch(({ response }) => {
-        toast.error(response.data.error);
-      });
+  const userAuthThroughServer = async (serverRoot, formData) => {
+    try {
+      const { data } = await axios.post(`${import.meta.env.VITE_SERVER_DOMAIN}${serverRoot}`, formData);
+      storeInSession("user", JSON.stringify(data));
+      setUserAuth(data);
+      toast.success("Authentication successful!");
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || "An error occurred during authentication.";
+      toast.error(errorMessage);
+      console.error("Authentication error:", error);
+    }
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
