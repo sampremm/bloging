@@ -1,2 +1,15 @@
+POST /createblog HTTP/1.1
+Host: localhost:3000
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3M2UxZDk5YWYxN2FjMjVjYjgxNGM2ZCIsImlhdCI6MTczMjEyNDA1NywiZXhwIjoxNzMyMjEwNDU3fQ.znZJzPg3NhGpc4fRc3uBaKMO12W2k08PrzeCjdtvbQc
 
-GET http://localhost:3000/uploadurl
+{
+    "title": "Test is the title",
+    "des":"thi is an airpilone",
+    "banner": "https://example.com/imgurl",
+    "content": {
+        "blocks": [1, 3]
+    },
+
+    "tags": ["tags", "tags3"]
+}

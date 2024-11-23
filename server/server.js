@@ -10,6 +10,9 @@ import admin from "firebase-admin";
 import serviceAccountKey from "./react-js-blog-website-c9a24-firebase-adminsdk-dndxz-48a34e334c.json" assert { type: "json" };
 import { getAuth } from "firebase-admin/auth";
 import aws from 'aws-sdk';
+import Blog from './Schema/Blog.js';
+
+
 
 const server = express();
 const PORT = process.env.PORT || 3000;
@@ -54,6 +57,25 @@ const generateUploadUrl = async () => {
     Key: imageKey,
     ContentType: 'image/jpeg',
     Expires: 1000,
+  });
+};
+
+const verifyjwt = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized: Token is missing" });
+  }
+
+  jwt.verify(token, process.env.SECRET_ACCESS_KEY, (err, user) => {
+    if (err) {
+      console.error("JWT verification error:", err.message);
+      return res.status(403).json({ message: "Access denied: Invalid token" });
+    }
+
+    req.user = user;
+    next();
   });
 };
 
@@ -136,6 +158,7 @@ server.post('/signin', (req, res) => {
       if (!user.google_auth) {
         bcrypt.compare(password, user.personal_info.password, (err, result) => {
           if (err || !result) {
+            console.error("Password comparison error:", err || "Incorrect password");
             return res.status(403).json({ error: "Incorrect email or password" });
           }
           return res.status(200).json(formatDataToSend(user));
@@ -177,6 +200,65 @@ server.post("/google-auth", async (req, res) => {
       res.status(500).json({ error: "Failed Google authentication" });
     });
 });
+
+server.post('/createblog', verifyjwt, async (req, res) => {
+  const authorID = req.user.id;
+  const { title, banner, content, des, draft } = req.body;
+  if (!title || title.trim().length === 0) {
+    return res.status(400).json({ error: "Title is required" });
+  }
+  if(!draft){
+    if (!des || des.trim().length === 0 || des.trim().length > 200) {
+      return res.status(400).json({ error: "Description must be between 1 and 200 characters" });
+    }
+    
+    if (!banner || banner.trim().length === 0) {
+      return res.status(400).json({ error: "Banner is required" });
+    }
+   
+    if (!content || !Array.isArray(content.blocks) || content.blocks.length === 0) {
+      return res.status(400).json({ error: "Content must have at least one block" });
+    }  
+
+  }
+
+ 
+ 
+  // Generate blog ID
+  let blog_id = title.replace(/[^a-zA-Z0-9]/g, "").replace(/\s+/g, "-").trim() + nanoid();
+
+  try {
+    // Save the blog
+    const blog = new Blog({
+      title,
+      des,
+      banner,
+      content,
+      author: authorID,
+      draft: Boolean(draft),
+      blog_id,
+    });
+
+    const savedBlog = await blog.save();
+
+    // Update the user with blog info
+    let incrementVal = draft ? 0 : 1;
+    await User.findOneAndUpdate(
+      { _id: authorID },
+      {
+        $inc: { "account_info.total_posts": incrementVal },
+        $push: { blogs: savedBlog._id },
+      }
+    );
+
+  
+    return res.status(200).json({ id: savedBlog.blog_id });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    return res.status(500).json({ error: "Failed to create blog" });
+  }
+});
+
 
 server.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);

@@ -6,11 +6,10 @@ import PublishForm from '../components/publish-form.component';
 
 
 const blogstructure = {
-    title:  '',
-    banner: '',
-    content: [],
-    text:[],
-    discription: '',
+    title:'',
+    banner:'',
+    content:[],
+    des:'',
     author: { personal_info:[]}
 }
 export const EditorContex= createContext({})

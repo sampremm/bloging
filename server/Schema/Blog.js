@@ -24,10 +24,6 @@ const blogSchema = mongoose.Schema({
         type: [],
         // required: true
     },
-    tags: {
-        type: [String],
-        // required: true
-    },
     author: {
         type: Schema.Types.ObjectId,
         required: true,
@@ -68,4 +64,4 @@ const blogSchema = mongoose.Schema({
 
 })
 
-export default mongoose.model("blogs", blogSchema);
+export default mongoose.model("blogs", blogSchema); 
